@@ -49,7 +49,7 @@ START_YEAR = 2011  # Codeforces started in 2011
 END_YEAR = 2025    # Current year
 
 # How to handle missing data
-MISSING_DATA_STRATEGY = "zero"  # Options: "zero", "nan", "previous"
+MISSING_DATA_STRATEGY = "nan"   # Options: "zero", "nan", "previous"
 
 # ==================== IOI DATES ====================
 # IOI competition dates - we'll extract rating 1 MONTH BEFORE each event
@@ -401,6 +401,70 @@ def calculate_ioi_timing_statistics(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def get_row_specific_data(handle: str, ioi_year: int, user_info_dir: Path, rating_dir: Path) -> dict:
+    """
+    For a specific contestant-year row, compute:
+      - cf_rating_reason: why the pre-IOI rating is missing (None when a valid rating exists)
+          "no_data_cached"          handle exists but rating JSON not downloaded
+          "no_contests_ever"        JSON exists; account never competed in a rated contest
+          "registered_after_ioi"    account created after the IOI date for this year
+          "no_rating_before_cutoff" had contests, but none before the 1-month cutoff date
+      - cf_contests_year: number of rated CF contests in the IOI calendar year (Jan–Dec)
+    """
+    safe = safe_filename(handle)
+    rating_file = rating_dir / f"{safe}.json"
+    info_file = user_info_dir / f"{safe}.json"
+
+    if not rating_file.exists():
+        return {"cf_rating_reason": "no_data_cached", "cf_contests_year": None}
+
+    try:
+        with open(rating_file, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+    except Exception:
+        return {"cf_rating_reason": "no_data_cached", "cf_contests_year": None}
+
+    if data.get("status") != "OK":
+        return {"cf_rating_reason": "no_data_cached", "cf_contests_year": None}
+
+    changes = sorted(data.get("result", []), key=lambda x: x.get("ratingUpdateTimeSeconds", 0))
+
+    # Count contests in the IOI calendar year
+    year_start_ts = int(datetime(ioi_year, 1, 1).timestamp())
+    year_end_ts   = int(datetime(ioi_year + 1, 1, 1).timestamp())
+    contests_in_year = sum(
+        1 for c in changes
+        if year_start_ts <= c.get("ratingUpdateTimeSeconds", 0) < year_end_ts
+    )
+
+    if len(changes) == 0:
+        return {"cf_rating_reason": "no_contests_ever", "cf_contests_year": 0}
+
+    # Check if account was created after the IOI date
+    if ioi_year in IOI_DATES and info_file.exists():
+        try:
+            with open(info_file, 'r', encoding='utf-8') as f:
+                info_data = json.load(f)
+            if info_data.get("status") == "OK" and info_data.get("result"):
+                reg_ts  = info_data["result"][0].get("registrationTimeSeconds", 0)
+                ioi_ts  = int(IOI_DATES[ioi_year].timestamp())
+                if reg_ts > ioi_ts:
+                    return {"cf_rating_reason": "registered_after_ioi", "cf_contests_year": contests_in_year}
+        except Exception:
+            pass
+
+    # Check whether any contest falls before the 1-month cutoff
+    if ioi_year in RATING_DATES:
+        cutoff_ts = int(RATING_DATES[ioi_year].timestamp())
+        has_rating_before_cutoff = any(
+            c.get("ratingUpdateTimeSeconds", 0) <= cutoff_ts for c in changes
+        )
+        if not has_rating_before_cutoff:
+            return {"cf_rating_reason": "no_rating_before_cutoff", "cf_contests_year": contests_in_year}
+
+    return {"cf_rating_reason": None, "cf_contests_year": contests_in_year}
+
+
 def main():
     """
     Main function to extract all Codeforces data
@@ -480,39 +544,52 @@ def main():
     processed = 0
     found_info = 0
     found_rating = 0
-    
+
+    reason_col   = 'cf_rating_reason' if USE_LOWERCASE_COLUMNS else 'CF_Rating_Reason'
+    contests_col = 'cf_contests_year'  if USE_LOWERCASE_COLUMNS else 'CF_Contests_Year'
+    year_col     = 'year'              if USE_LOWERCASE_COLUMNS else 'Year'
+
     for idx, row in df.iterrows():
         handle = row[handle_col]
-        
-        # Skip empty handles
+
+        # No handle: mark reason and move on (no CF data to extract)
         if pd.isna(handle) or str(handle).strip() == "":
+            df.at[idx, reason_col]   = "no_handle"
+            df.at[idx, contests_col] = None
             processed += 1
             continue
-        
-        handle = str(handle).strip()
-        
-        # Process this handle
-        data = process_single_handle(handle, USER_INFO_DIR, USER_RATING_DIR, 
+
+        handle   = str(handle).strip()
+        ioi_year = int(row[year_col])
+
+        # Extract all-year CF profile and rating data
+        data = process_single_handle(handle, USER_INFO_DIR, USER_RATING_DIR,
                                      START_YEAR, END_YEAR)
-        
+
         # Add data to DataFrame
         for key, value in data.items():
             if key not in df.columns:
                 df[key] = None
             df.at[idx, key] = value
-        
+
+        # Compute row-specific columns (reason + contests in this IOI year)
+        row_data = get_row_specific_data(handle, ioi_year, USER_INFO_DIR, USER_RATING_DIR)
+        df.at[idx, reason_col]   = row_data["cf_rating_reason"]
+        df.at[idx, contests_col] = row_data["cf_contests_year"]
+
         # Count successes
         reg_date_col = 'cf_registration_date' if USE_LOWERCASE_COLUMNS else 'CF_Registration_Date'
         if data.get(reg_date_col) is not None:
             found_info += 1
-        
+
         rating_prefix = 'rating_' if USE_LOWERCASE_COLUMNS else 'Rating_'
-        has_rating = any(data.get(f'{rating_prefix}{year}', 0) > 0 for year in range(START_YEAR, END_YEAR + 1))
+        has_rating = any(data.get(f'{rating_prefix}{year}') not in (None, 0)
+                         for year in range(START_YEAR, END_YEAR + 1))
         if has_rating:
             found_rating += 1
-        
+
         processed += 1
-        
+
         # Print progress every 100 handles
         if processed % 100 == 0 or processed == total:
             print(f"[{processed}/{total}] Processed: {handle}", flush=True)
