@@ -32,6 +32,13 @@ else:
 OUTPUT_TEX = Path(__file__).parent / "output" / "tab_summary_by_year.tex"
 OUTPUT_TEX.parent.mkdir(exist_ok=True)
 
+# Overleaf mirror: gtl-allocation/overleaf/GTAllocation/tables/ioi/
+_gtl_path = os.getenv("gtl_path")
+OVERLEAF_TEX = (
+    Path(_gtl_path).parent / "gtl-allocation" / "overleaf" / "GTAllocation" / "tables" / "ioi" / "cf_summary_by_year.tex"
+    if _gtl_path else None
+)
+
 # ── IOI dates (start of competition) ─────────────────────────────────────────
 IOI_DATES = {
     2011: datetime(2011, 7, 22),
@@ -185,3 +192,6 @@ latex = "\n".join(lines)
 print("\n" + latex + "\n")
 OUTPUT_TEX.write_text(latex, encoding="utf-8")
 print(f"Saved to {OUTPUT_TEX}")
+if OVERLEAF_TEX and OVERLEAF_TEX.parent.exists():
+    OVERLEAF_TEX.write_text(latex, encoding="utf-8")
+    print(f"Mirrored to {OVERLEAF_TEX}")
