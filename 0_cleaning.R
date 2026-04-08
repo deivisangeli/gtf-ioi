@@ -9,8 +9,7 @@ rm(list=ls())
 
 ### Load data
 ## Define path
-Sys.setenv(db_path = "C:/Users/thtak/Globtalent Dropbox")
-db_path <- Sys.getenv("db_path") ### Dropbox path
+db_path <- Sys.getenv("db_path") ### Dropbox path (set via: setx db_path "C:/Users/YOUR_NAME/Globtalent Dropbox")
 gtl_path <- Sys.getenv("gtl_path") ### github file path
 cf_path <- file.path(db_path, "Codeforces") ### GT codeforces folder path
 

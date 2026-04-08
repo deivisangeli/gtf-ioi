@@ -16,6 +16,7 @@ Features:
 Author: Thais Takeuchi
 Date: December 2025
 """
+import sys
 import requests
 from bs4 import BeautifulSoup
 import time as time_module
@@ -25,19 +26,27 @@ import logging
 import os
 import re
 from typing import List, Dict, Set, Optional
+
+sys.stdout.reconfigure(encoding='utf-8')
 from urllib.parse import urljoin
 from datetime import datetime
 
-# Configure logging
+# Configure logging with UTF-8 encoding to avoid cp1252 crash on Windows
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[logging.StreamHandler(stream=open(sys.stdout.fileno(), mode='w', encoding='utf-8', closefd=False))]
 )
 logger = logging.getLogger(__name__)
 
 # ==================== CONFIGURATION ====================
-base_dir = os.getenv("GT_PATH", os.getcwd())
-BASE_DIR = Path(base_dir) / "Globtalent Dropbox" / "Codeforces" / "Data"
+# Preferred: db_path (e.g. "C:/Users/YourName/Globtalent Dropbox")
+# Fallback:  GT_PATH (e.g. "C:/Users/YourName") — appends "Globtalent Dropbox"
+_db_path = os.getenv("db_path")
+if _db_path:
+    BASE_DIR = Path(_db_path.rstrip("/\\")) / "Codeforces" / "Data"
+else:
+    BASE_DIR = Path(os.getenv("GT_PATH", os.getcwd())) / "Globtalent Dropbox" / "Codeforces" / "Data"
 
 # Output files
 CPHOF_FILE = BASE_DIR / "ioi_cphof.xlsx"

@@ -13,17 +13,24 @@ Author: Thais Takeuchi
 Date: December 2025
 """
 
+import sys
 import pandas as pd
 import json
 import os
 from datetime import datetime, timedelta
 from pathlib import Path
 
+sys.stdout.reconfigure(encoding='utf-8')
+
 # ==================== CONFIGURATION ====================
-# Define base directory from environment variable or fallback
-# Set GT_PATH environment variable to your base path (e.g., C:\Users\YourName)
-base_dir = os.getenv("GT_PATH", os.getcwd())
-BASE_DIR = Path(base_dir) / "Globtalent Dropbox" / "Codeforces" / "Data" 
+# Resolve base directory from environment variables.
+# Preferred: db_path (e.g. "C:/Users/YourName/Globtalent Dropbox")
+# Fallback:  GT_PATH (e.g. "C:/Users/YourName") — appends "Globtalent Dropbox"
+_db_path = os.getenv("db_path")
+if _db_path:
+    BASE_DIR = Path(_db_path.rstrip("/\\")) / "Codeforces" / "Data"
+else:
+    BASE_DIR = Path(os.getenv("GT_PATH", os.getcwd())) / "Globtalent Dropbox" / "Codeforces" / "Data"
 
 # File paths
 INPUT_EXCEL = BASE_DIR / "ioi_total.xlsx"
@@ -508,7 +515,7 @@ def main():
         
         # Print progress every 100 handles
         if processed % 100 == 0 or processed == total:
-            print(f"[{processed}/{total}] Processed: {handle}")
+            print(f"[{processed}/{total}] Processed: {handle}", flush=True)
     
     print("=" * 70)
     print(f"\nProcessing Summary:")

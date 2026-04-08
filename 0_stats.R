@@ -9,8 +9,7 @@ rm(list=ls())
 
 ### Load data
 ## Define path
-Sys.setenv(db_path = "C:/Users/thtak/Globtalent Dropbox")
-db_path <- Sys.getenv("db_path") ### Dropbox path
+db_path <- Sys.getenv("db_path") ### Dropbox path (set via: setx db_path "C:/Users/YOUR_NAME/Globtalent Dropbox")
 gtl_path <- Sys.getenv("gtl_path") ### github file path
 
 
@@ -196,5 +195,4 @@ ggsave(
 ioi_unique <- n_distinct(ioi$contestant) #3522
 
 # How many of them have an account on Codeforces?
-oi <- ioi_unique_cf %>% 
-  filter(!is.na(ioi_unique_cf$handle)) #2062 
+ioi_unique_cf <- n_distinct(ioi_with_cf$contestant) #2062
