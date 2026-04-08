@@ -88,7 +88,7 @@ for year in sorted(df["year"].dropna().unique()):
 
     hh_mean, hh_sd, hh_min, hh_max = stats(sub["has_handle"].astype(float))
     ab_mean, ab_sd, ab_min, ab_max = stats(sub["active_before_ioi"].astype(float))
-    ms_mean, ms_sd, ms_min, ms_max = stats(sub.loc[sub["active_before_ioi"] == 1, "months_on_cf"])
+    ms_mean, ms_sd, ms_min, ms_max = stats(sub["months_on_cf"])
 
     rows.append(dict(
         year=yr, n=n,
@@ -149,7 +149,7 @@ lines += [
 all_n      = int(tbl["n"].sum())
 hh_m, hh_s, hh_lo, hh_hi = stats(df["has_handle"].astype(float))
 ab_m, ab_s, ab_lo, ab_hi = stats(df["active_before_ioi"].astype(float))
-ms_m, ms_s, ms_lo, ms_hi = stats(df.loc[df["has_handle"] == 1, "months_on_cf"])
+ms_m, ms_s, ms_lo, ms_hi = stats(df["months_on_cf"])
 
 lines.append(
     rf"\textit{{All}} & {all_n}"
