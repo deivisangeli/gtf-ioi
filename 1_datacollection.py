@@ -409,47 +409,63 @@ def get_row_specific_data(handle: str, ioi_year: int, user_info_dir: Path, ratin
           "no_contests_ever"        JSON exists; account never competed in a rated contest
           "registered_after_ioi"    account created after the IOI date for this year
           "no_rating_before_cutoff" had contests, but none before the 1-month cutoff date
-      - cf_contests_year: number of rated CF contests in the IOI calendar year (Jan–Dec)
+      - cf_contests_before_ioi: rated contests with ratingUpdateTimeSeconds < IOI start
+                                 (None only for no_data_cached; 0 if no contests before IOI)
+      - cf_contests_6m: rated contests in [IOI_date - 182 days, IOI_date)
+                        (None only for no_data_cached; 0 if none in window)
     """
     safe = safe_filename(handle)
     rating_file = rating_dir / f"{safe}.json"
     info_file = user_info_dir / f"{safe}.json"
 
+    _null = {"cf_rating_reason": "no_data_cached", "cf_contests_before_ioi": None, "cf_contests_6m": None}
+
     if not rating_file.exists():
-        return {"cf_rating_reason": "no_data_cached", "cf_contests_year": None}
+        return _null
 
     try:
         with open(rating_file, 'r', encoding='utf-8') as f:
             data = json.load(f)
     except Exception:
-        return {"cf_rating_reason": "no_data_cached", "cf_contests_year": None}
+        return _null
 
     if data.get("status") != "OK":
-        return {"cf_rating_reason": "no_data_cached", "cf_contests_year": None}
+        return _null
 
     changes = sorted(data.get("result", []), key=lambda x: x.get("ratingUpdateTimeSeconds", 0))
 
-    # Count contests in the IOI calendar year
-    year_start_ts = int(datetime(ioi_year, 1, 1).timestamp())
-    year_end_ts   = int(datetime(ioi_year + 1, 1, 1).timestamp())
-    contests_in_year = sum(
-        1 for c in changes
-        if year_start_ts <= c.get("ratingUpdateTimeSeconds", 0) < year_end_ts
-    )
+    # Compute contest counts relative to IOI date
+    if ioi_year in IOI_DATES:
+        ioi_ts        = int(IOI_DATES[ioi_year].timestamp())
+        six_months_ts = ioi_ts - 182 * 86400
+        contests_before_ioi = sum(
+            1 for c in changes if c.get("ratingUpdateTimeSeconds", 0) < ioi_ts
+        )
+        contests_6m = sum(
+            1 for c in changes
+            if six_months_ts <= c.get("ratingUpdateTimeSeconds", 0) < ioi_ts
+        )
+    else:
+        ioi_ts              = None
+        contests_before_ioi = None
+        contests_6m         = None
 
     if len(changes) == 0:
-        return {"cf_rating_reason": "no_contests_ever", "cf_contests_year": None}
+        return {"cf_rating_reason": "no_contests_ever",
+                "cf_contests_before_ioi": contests_before_ioi,
+                "cf_contests_6m": contests_6m}
 
     # Check if account was created after the IOI date
-    if ioi_year in IOI_DATES and info_file.exists():
+    if ioi_ts is not None and info_file.exists():
         try:
             with open(info_file, 'r', encoding='utf-8') as f:
                 info_data = json.load(f)
             if info_data.get("status") == "OK" and info_data.get("result"):
-                reg_ts  = info_data["result"][0].get("registrationTimeSeconds", 0)
-                ioi_ts  = int(IOI_DATES[ioi_year].timestamp())
+                reg_ts = info_data["result"][0].get("registrationTimeSeconds", 0)
                 if reg_ts > ioi_ts:
-                    return {"cf_rating_reason": "registered_after_ioi", "cf_contests_year": None}
+                    return {"cf_rating_reason": "registered_after_ioi",
+                            "cf_contests_before_ioi": contests_before_ioi,
+                            "cf_contests_6m": contests_6m}
         except Exception:
             pass
 
@@ -460,9 +476,13 @@ def get_row_specific_data(handle: str, ioi_year: int, user_info_dir: Path, ratin
             c.get("ratingUpdateTimeSeconds", 0) <= cutoff_ts for c in changes
         )
         if not has_rating_before_cutoff:
-            return {"cf_rating_reason": "no_rating_before_cutoff", "cf_contests_year": None}
+            return {"cf_rating_reason": "no_rating_before_cutoff",
+                    "cf_contests_before_ioi": contests_before_ioi,
+                    "cf_contests_6m": contests_6m}
 
-    return {"cf_rating_reason": None, "cf_contests_year": contests_in_year}
+    return {"cf_rating_reason": None,
+            "cf_contests_before_ioi": contests_before_ioi,
+            "cf_contests_6m": contests_6m}
 
 
 def main():
@@ -545,17 +565,19 @@ def main():
     found_info = 0
     found_rating = 0
 
-    reason_col   = 'cf_rating_reason' if USE_LOWERCASE_COLUMNS else 'CF_Rating_Reason'
-    contests_col = 'cf_contests_year'  if USE_LOWERCASE_COLUMNS else 'CF_Contests_Year'
-    year_col     = 'year'              if USE_LOWERCASE_COLUMNS else 'Year'
+    reason_col        = 'cf_rating_reason'    if USE_LOWERCASE_COLUMNS else 'CF_Rating_Reason'
+    contests_b_col    = 'cf_contests_before_ioi' if USE_LOWERCASE_COLUMNS else 'CF_Contests_Before_IOI'
+    contests_6m_col   = 'cf_contests_6m'     if USE_LOWERCASE_COLUMNS else 'CF_Contests_6M'
+    year_col          = 'year'               if USE_LOWERCASE_COLUMNS else 'Year'
 
     for idx, row in df.iterrows():
         handle = row[handle_col]
 
         # No handle: mark reason and move on (no CF data to extract)
         if pd.isna(handle) or str(handle).strip() == "":
-            df.at[idx, reason_col]   = "no_handle"
-            df.at[idx, contests_col] = None
+            df.at[idx, reason_col]      = "no_handle"
+            df.at[idx, contests_b_col]  = None
+            df.at[idx, contests_6m_col] = None
             processed += 1
             continue
 
@@ -572,10 +594,11 @@ def main():
                 df[key] = None
             df.at[idx, key] = value
 
-        # Compute row-specific columns (reason + contests in this IOI year)
+        # Compute row-specific columns (reason + contest counts relative to IOI date)
         row_data = get_row_specific_data(handle, ioi_year, USER_INFO_DIR, USER_RATING_DIR)
-        df.at[idx, reason_col]   = row_data["cf_rating_reason"]
-        df.at[idx, contests_col] = row_data["cf_contests_year"]
+        df.at[idx, reason_col]      = row_data["cf_rating_reason"]
+        df.at[idx, contests_b_col]  = row_data["cf_contests_before_ioi"]
+        df.at[idx, contests_6m_col] = row_data["cf_contests_6m"]
 
         # Count successes
         reg_date_col = 'cf_registration_date' if USE_LOWERCASE_COLUMNS else 'CF_Registration_Date'

@@ -83,9 +83,11 @@ df["months_on_cf"] = np.where(
 PERIODS = {"2011--2015": (2011, 2015), "2016--2025": (2016, 2025)}
 
 VARIABLES = [
-    ("Has CF handle",      "has_handle",         "{:.2f}"),
-    ("Active before IOI",  "active_before_ioi",  "{:.2f}"),
-    ("Months on CF",       "months_on_cf",        "{:.1f}"),
+    ("Has CF handle",         "has_handle",              "{:.2f}"),
+    ("Active before IOI",     "active_before_ioi",       "{:.2f}"),
+    ("Months on CF",          "months_on_cf",            "{:.1f}"),
+    ("Contests before IOI",   "cf_contests_before_ioi",  "{:.0f}"),
+    ("Contests (6m before)",  "cf_contests_6m",          "{:.0f}"),
 ]
 
 def stats(s):
