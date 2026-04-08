@@ -1,0 +1,51 @@
+======================================================================
+✓ DATA COLLECTION COMPLETE!
+======================================================================
+Total participants: 5432
+  From CPHOF: 4908
+  From IOI Stats Only: 524
+
+Codeforces links:
+  With CF link: 3483
+  Without CF link: 1949
+
+Scores:
+  With Score: 5422
+  Average Score: 215.80
+
+Years covered: [np.int64(2011), np.int64(2012), np.int64(2013), np.int64(2014), np.int64(2015), np.int64(2016), np.int64(2017), np.int64(2018), np.int64(2019), np.int64(2020), np.int64(2021), np.int64(2022), np.int64(2023), np.int64(2024), np.int64(2025)]
+
+Files saved:
+  - CPHOF data: C:\Users\thtak\Globtalent Dropbox\Codeforces\Data\ioi_cphof.xlsx
+    Years: [np.int64(2011), np.int64(2012), np.int64(2013), np.int64(2014), np.int64(2015), np.int64(2016), np.int64(2017), np.int64(2018), np.int64(2019), np.int64(2020), np.int64(2021), np.int64(2022), np.int64(2023), np.int64(2024), np.int64(2025)]
+  - IOI Stats data: C:\Users\thtak\Globtalent Dropbox\Codeforces\Data\ioi_stats.xlsx
+    Years: [np.int64(2011), np.int64(2012), np.int64(2013), np.int64(2014), np.int64(2015), np.int64(2016), np.int64(2017), np.int64(2018), np.int64(2019), np.int64(2020), np.int64(2021), np.int64(2022), np.int64(2023), np.int64(2024), np.int64(2025)]
+  - Final consolidated: C:\Users\thtak\Globtalent Dropbox\Codeforces\Data\ioi_total.xlsx
+    Years: [np.int64(2011), np.int64(2012), np.int64(2013), np.int64(2014), np.int64(2015), np.int64(2016), np.int64(2017), np.int64(2018), np.int64(2019), np.int64(2020), np.int64(2021), np.int64(2022), np.int64(2023), np.int64(2024), np.int64(2025)]
+
+======================================================================
+⏱️  EXECUTION TIME BREAKDOWN:
+======================================================================
+STEP 1 (CPHOF scraping):     2.52 hours
+STEP 2 (IOI Stats scraping): 2.59 hours
+STEP 3 (Comparison):         0.1 seconds
+STEP 4 (Consolidation):      1.5 seconds
+──────────────────────────────────────────────────────────────────────
+TOTAL EXECUTION TIME:        5.10 hours
+======================================================================
+
+======================================================================
+SAMPLE OF CONSOLIDATED DATA:
+======================================================================
+ Year                Contestant  Country   Result  Score                                   CF_Link         Source
+ 2011              Aaron Montag  Germany   Bronze  335.0                                      None          CPHOF
+ 2011 Abdulbaset Hassan Aljoudi    Syria No Award  141.0                                      None          CPHOF
+ 2011          Abdullah Alperen   Turkey   Bronze  267.0                                      None          CPHOF
+ 2011           Abhratanu Dutta    India No Award  223.0      https://codeforces.com/profile/abhra          CPHOF
+ 2011         Adam Bardashevich  Belarus   Silver  428.0 https://codeforces.com/profile/subscriber          CPHOF
+ 2011              Adrian Budau  Romania   Silver  420.0    https://codeforces.com/profile/freak93          CPHOF
+ 2011              Adrian Budău  Romania   Silver  420.0     http://codeforces.com/profile/freak93 IOI_Stats_Only
+ 2011             Afonso Santos Portugal No Award  147.0                                      None          CPHOF
+ 2011  Aghogho Premobowei Etibo  Nigeria No Award    0.0                                      None          CPHOF
+ 2011              Ago Allikmaa  Estonia No Award  240.0                                      None          CPHOF
+PS C:\Users\thtak> 
