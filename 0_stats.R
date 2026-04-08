@@ -227,6 +227,89 @@ ggsave(
   dpi = 300
 )
 
+# Experience by medal type × year ----
+IOI_DATES_R <- setNames(
+  as.Date(c(
+    "2011-07-22", "2012-09-23", "2013-07-06", "2014-07-13",
+    "2015-07-26", "2016-08-12", "2017-07-28", "2018-09-01",
+    "2019-08-04", "2020-09-13", "2021-06-19", "2022-08-07",
+    "2023-08-28", "2024-09-01", "2025-07-27"
+  )),
+  as.character(2011:2025)
+)
+
+medal_levels  <- c("Gold", "Silver", "Bronze", "No Award")
+medal_colours <- c(Gold = "#DAA520", Silver = "#909090", Bronze = "#CD7F32", "No Award" = "#BBBBBB")
+
+ioi_exp <- ioi %>%
+  filter(!is.na(handle)) %>%
+  mutate(
+    result_unified = factor(case_when(
+      result %in% c("Gold", "Gold (3rd)", "Gold*") ~ "Gold",
+      result %in% c("Silver", "Silver*")            ~ "Silver",
+      result %in% c("Bronze", "Bronze*")            ~ "Bronze",
+      TRUE                                          ~ "No Award"
+    ), levels = medal_levels),
+    ioi_date    = IOI_DATES_R[as.character(year)],
+    cf_reg_date = as.Date(cf_registration_date),
+    # months on CF: only for participants active before IOI (cf_rating_reason is NA)
+    months_on_cf = if_else(
+      is.na(cf_rating_reason) & !is.na(cf_reg_date),
+      as.numeric(ioi_date - cf_reg_date) / 30.44,
+      NA_real_
+    )
+  )
+
+exp_summary <- ioi_exp %>%
+  group_by(year, result_unified) %>%
+  summarise(
+    mean_contests = mean(cf_contests_before_ioi, na.rm = TRUE),
+    mean_months   = mean(months_on_cf,           na.rm = TRUE),
+    n_contests    = sum(!is.na(cf_contests_before_ioi)),
+    n_months      = sum(!is.na(months_on_cf)),
+    .groups = "drop"
+  )
+
+p_exp_contests <- ggplot(exp_summary, aes(x = year, y = mean_contests,
+                                          color = result_unified, group = result_unified)) +
+  geom_line(linewidth = 0.8) +
+  geom_point(size = 2.5) +
+  scale_color_manual(values = medal_colours, name = NULL) +
+  scale_x_continuous(breaks = 2011:2025) +
+  labs(
+    title = "Rated CF contests before IOI, by medal",
+    x = NULL, y = "Mean contests before IOI"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+p_exp_months <- ggplot(exp_summary, aes(x = year, y = mean_months,
+                                        color = result_unified, group = result_unified)) +
+  geom_line(linewidth = 0.8) +
+  geom_point(size = 2.5) +
+  scale_color_manual(values = medal_colours, name = NULL) +
+  scale_x_continuous(breaks = 2011:2025) +
+  labs(
+    title = "Months on Codeforces before IOI, by medal",
+    subtitle = "Conditional on having a rated contest before the IOI",
+    x = "IOI year", y = "Mean months since CF registration"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+p_exp_combined <- p_exp_contests / p_exp_months +
+  plot_layout(guides = "collect") &
+  theme(legend.position = "bottom")
+
+print(p_exp_combined)
+ggsave(
+  filename = file.path(cf_path, "output", "cf_experience_by_medal_year.png"),
+  plot = p_exp_combined,
+  width = 10,
+  height = 10,
+  dpi = 300
+)
+
 # How many participants?
 ioi_unique <- n_distinct(ioi$contestant) #3522
 
