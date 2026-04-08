@@ -438,7 +438,7 @@ def get_row_specific_data(handle: str, ioi_year: int, user_info_dir: Path, ratin
     )
 
     if len(changes) == 0:
-        return {"cf_rating_reason": "no_contests_ever", "cf_contests_year": 0}
+        return {"cf_rating_reason": "no_contests_ever", "cf_contests_year": None}
 
     # Check if account was created after the IOI date
     if ioi_year in IOI_DATES and info_file.exists():
@@ -449,7 +449,7 @@ def get_row_specific_data(handle: str, ioi_year: int, user_info_dir: Path, ratin
                 reg_ts  = info_data["result"][0].get("registrationTimeSeconds", 0)
                 ioi_ts  = int(IOI_DATES[ioi_year].timestamp())
                 if reg_ts > ioi_ts:
-                    return {"cf_rating_reason": "registered_after_ioi", "cf_contests_year": contests_in_year}
+                    return {"cf_rating_reason": "registered_after_ioi", "cf_contests_year": None}
         except Exception:
             pass
 
@@ -460,7 +460,7 @@ def get_row_specific_data(handle: str, ioi_year: int, user_info_dir: Path, ratin
             c.get("ratingUpdateTimeSeconds", 0) <= cutoff_ts for c in changes
         )
         if not has_rating_before_cutoff:
-            return {"cf_rating_reason": "no_rating_before_cutoff", "cf_contests_year": contests_in_year}
+            return {"cf_rating_reason": "no_rating_before_cutoff", "cf_contests_year": None}
 
     return {"cf_rating_reason": None, "cf_contests_year": contests_in_year}
 
