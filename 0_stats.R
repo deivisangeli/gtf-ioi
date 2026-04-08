@@ -172,6 +172,61 @@ ggsave(
   dpi = 300
 )
 
+# Conditional plots: 5+ contests in 6 months before IOI ----
+ioi_long_active6m5 <- ioi %>%
+  filter(!is.na(cf_contests_6m) & cf_contests_6m >= 5) %>%
+  select(year, contestant, country, result, score,
+         rating_2011:rating_2025) %>%
+  pivot_longer(
+    cols = starts_with("rating_"),
+    names_to = "rating_year",
+    values_to = "rating",
+    names_prefix = "rating_"
+  ) %>%
+  mutate(rating_year = as.numeric(rating_year)) %>%
+  filter(!is.na(rating), score > 0)
+
+p_active6m5 <- ggplot(ioi_long_active6m5, aes(x = rating, y = score)) +
+  geom_point(alpha = 0.3, color = "steelblue") +
+  geom_smooth(method = "lm", color = "red", se = TRUE) +
+  labs(
+    title = "IOI Score vs Codeforces Rating (2011-2025)",
+    subtitle = "Restricted to participants with 5+ rated CF contests in 6 months before IOI",
+    x = "Codeforces Rating",
+    y = "IOI Score"
+  ) +
+  theme_minimal()
+
+print(p_active6m5)
+ggsave(
+  filename = file.path(cf_path, "output", "ioi_score_vs_rating_active6m5.png"),
+  plot = p_active6m5,
+  width = 10,
+  height = 6,
+  dpi = 300
+)
+
+p_active6m5_by_year <- ggplot(ioi_long_active6m5, aes(x = rating, y = score)) +
+  geom_point(alpha = 0.3, color = "steelblue") +
+  geom_smooth(method = "lm", color = "red", se = TRUE) +
+  facet_wrap(~ rating_year, ncol = 3) +
+  labs(
+    title = "IOI Score vs Codeforces Rating by Year (2011-2025)",
+    subtitle = "Restricted to participants with 5+ rated CF contests in 6 months before IOI",
+    x = "Codeforces Rating",
+    y = "IOI Score"
+  ) +
+  theme_minimal()
+
+print(p_active6m5_by_year)
+ggsave(
+  filename = file.path(cf_path, "output", "ioi_score_vs_rating_by_year_active6m5.png"),
+  plot = p_active6m5_by_year,
+  width = 12,
+  height = 10,
+  dpi = 300
+)
+
 # How many participants?
 ioi_unique <- n_distinct(ioi$contestant) #3522
 
