@@ -67,7 +67,7 @@ df["cf_reg_dt"] = pd.to_datetime(df["cf_registration_date"], errors="coerce")
 df["ioi_dt"]   = df["year"].apply(lambda y: IOI_DATES.get(int(y)) if pd.notna(y) else pd.NaT)
 
 df["months_on_cf"] = np.where(
-    df["has_handle"].eq(1) & df["cf_reg_dt"].notna(),
+    df["active_before_ioi"].eq(1) & df["cf_reg_dt"].notna(),
     (df["ioi_dt"] - df["cf_reg_dt"]).dt.days / 30.44,
     np.nan
 )
@@ -88,7 +88,7 @@ for year in sorted(df["year"].dropna().unique()):
 
     hh_mean, hh_sd, hh_min, hh_max = stats(sub["has_handle"].astype(float))
     ab_mean, ab_sd, ab_min, ab_max = stats(sub["active_before_ioi"].astype(float))
-    ms_mean, ms_sd, ms_min, ms_max = stats(sub.loc[sub["has_handle"] == 1, "months_on_cf"])
+    ms_mean, ms_sd, ms_min, ms_max = stats(sub.loc[sub["active_before_ioi"] == 1, "months_on_cf"])
 
     rows.append(dict(
         year=yr, n=n,
@@ -174,7 +174,7 @@ lines += [
     r"\textit{Active before IOI}: indicator for having at least one rated Codeforces "
     r"contest before the month preceding the IOI. "
     r"\textit{Months on CF at IOI}: months elapsed between CF account registration "
-    r"and the IOI start date, conditional on having a handle.",
+    r"and the IOI start date, conditional on being active before the IOI.",
     r"\end{minipage}",
     r"\end{table}",
 ]
