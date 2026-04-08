@@ -1,36 +1,24 @@
 \begin{table}[htbp]
 \centering
-\caption{Codeforces participation among IOI contestants, by year}
+\caption{Codeforces participation among IOI contestants}
 \label{tab:cf_summary_by_year}
-\small
-\begin{tabular}{r r | rrrr | rrrr | rrrr}
+\begin{tabular}{l l r r r r r}
 \toprule
- & & \multicolumn{4}{c|}{\textit{Has CF handle}} & \multicolumn{4}{c|}{\textit{Active before IOI}} & \multicolumn{4}{c}{\textit{Months on CF at IOI}} \\
-\cmidrule(lr){3-6}\cmidrule(lr){7-10}\cmidrule(lr){11-14}
-Year & $N$ & Mean & SD & Min & Max & Mean & SD & Min & Max & Mean & SD & Min & Max \\
+Variable & Period & $N$ & Mean & SD & Min & Max \\
 \midrule
-2011 & 353 & 0.31 & 0.46 & 0.00 & 1.00 & 0.18 & 0.38 & 0.00 & 1.00 & 13.1 & 4.2 & 1.6 & 17.7 \\
-2012 & 370 & 0.41 & 0.49 & 0.00 & 1.00 & 0.34 & 0.47 & 0.00 & 1.00 & 18.3 & 8.5 & 2.4 & 31.8 \\
-2013 & 349 & 0.61 & 0.49 & 0.00 & 1.00 & 0.54 & 0.50 & 0.00 & 1.00 & 19.9 & 10.2 & 2.5 & 41.2 \\
-2014 & 350 & 0.60 & 0.49 & 0.00 & 1.00 & 0.53 & 0.50 & 0.00 & 1.00 & 23.1 & 11.1 & 1.4 & 52.5 \\
-2015 & 372 & 0.71 & 0.45 & 0.00 & 1.00 & 0.60 & 0.49 & 0.00 & 1.00 & 26.1 & 13.5 & 1.4 & 53.3 \\
-2016 & 358 & 0.72 & 0.45 & 0.00 & 1.00 & 0.66 & 0.47 & 0.00 & 1.00 & 27.0 & 13.0 & 2.9 & 63.8 \\
-2017 & 364 & 0.71 & 0.45 & 0.00 & 1.00 & 0.62 & 0.49 & 0.00 & 1.00 & 29.2 & 14.5 & 1.6 & 67.4 \\
-2018 & 400 & 0.70 & 0.46 & 0.00 & 1.00 & 0.63 & 0.48 & 0.00 & 1.00 & 31.0 & 15.2 & 1.5 & 78.7 \\
-2019 & 387 & 0.71 & 0.45 & 0.00 & 1.00 & 0.64 & 0.48 & 0.00 & 1.00 & 33.6 & 16.5 & 1.2 & 89.8 \\
-2020 & 355 & 0.68 & 0.47 & 0.00 & 1.00 & 0.63 & 0.48 & 0.00 & 1.00 & 35.4 & 17.5 & 1.7 & 92.6 \\
-2021 & 357 & 0.70 & 0.46 & 0.00 & 1.00 & 0.67 & 0.47 & 0.00 & 1.00 & 34.1 & 18.4 & 2.7 & 101.7 \\
-2022 & 359 & 0.62 & 0.49 & 0.00 & 1.00 & 0.59 & 0.49 & 0.00 & 1.00 & 37.9 & 17.6 & 4.4 & 115.3 \\
-2023 & 356 & 0.63 & 0.48 & 0.00 & 1.00 & 0.59 & 0.49 & 0.00 & 1.00 & 40.3 & 18.8 & 3.0 & 102.2 \\
-2024 & 367 & 0.78 & 0.42 & 0.00 & 1.00 & 0.70 & 0.46 & 0.00 & 1.00 & 39.1 & 17.7 & 3.3 & 100.7 \\
-2025 & 335 & 0.70 & 0.46 & 0.00 & 1.00 & 0.67 & 0.47 & 0.00 & 1.00 & 42.8 & 19.8 & 1.5 & 111.5 \\
-\midrule
-\textit{All} & 5432 & 0.64 & 0.48 & 0.00 & 1.00 & 0.57 & 0.49 & 0.00 & 1.00 & 31.6 & 17.3 & 1.2 & 115.3 \\
+\textit{Has CF handle} & 2011--2015 & 1794 & 0.53 & 0.50 & 0.00 & 1.00 \\
+ & 2016--2025 & 3638 & 0.70 & 0.46 & 0.00 & 1.00 \\
+\addlinespace
+\textit{Active before IOI} & 2011--2015 & 1794 & 0.44 & 0.50 & 0.00 & 1.00 \\
+ & 2016--2025 & 3638 & 0.64 & 0.48 & 0.00 & 1.00 \\
+\addlinespace
+\textit{Months on CF} & 2011--2015 & 783 & 21.6 & 11.5 & 1.4 & 53.3 \\
+ & 2016--2025 & 2326 & 34.9 & 17.6 & 1.2 & 115.3 \\
 \bottomrule
 \end{tabular}
 \begin{minipage}{\linewidth}
 \smallskip
 \footnotesize
-\textit{Notes:} Unit of observation is participant $\times$ year. \textit{Has CF handle}: indicator for whether a Codeforces profile link was found in CPHOF or IOI Stats. \textit{Active before IOI}: indicator for having at least one rated Codeforces contest before the month preceding the IOI. \textit{Months on CF at IOI}: months elapsed between CF account registration and the IOI start date, conditional on being active before the IOI.
+\textit{Notes:} Unit of observation is participant $\times$ year. $N$ is variable-specific (rows with non-missing values). \textit{Has CF handle}: indicator for whether a Codeforces profile link was found in CPHOF or IOI Stats. \textit{Active before IOI}: indicator for having at least one rated Codeforces contest before the month preceding the IOI. \textit{Months on CF}: months elapsed between CF account registration and the IOI start date, conditional on being active before the IOI.
 \end{minipage}
 \end{table}

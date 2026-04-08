@@ -79,95 +79,50 @@ df["months_on_cf"] = np.where(
     np.nan
 )
 
-# ── summary stats by year ─────────────────────────────────────────────────────
+# ── summary stats by variable × period ───────────────────────────────────────
+PERIODS = {"2011--2015": (2011, 2015), "2016--2025": (2016, 2025)}
+
+VARIABLES = [
+    ("Has CF handle",      "has_handle",         "{:.2f}"),
+    ("Active before IOI",  "active_before_ioi",  "{:.2f}"),
+    ("Months on CF",       "months_on_cf",        "{:.1f}"),
+]
+
 def stats(s):
-    """Return (mean, sd, min, max) for a Series, or (nan,nan,nan,nan) if empty."""
     s = s.dropna()
     if len(s) == 0:
-        return np.nan, np.nan, np.nan, np.nan
-    return s.mean(), s.std(ddof=1), s.min(), s.max()
+        return len(s), np.nan, np.nan, np.nan, np.nan
+    return len(s), s.mean(), s.std(ddof=1), s.min(), s.max()
 
-rows = []
-for year in sorted(df["year"].dropna().unique()):
-    yr   = int(year)
-    sub  = df[df["year"] == yr]
-    n    = len(sub)
-
-    hh_mean, hh_sd, hh_min, hh_max = stats(sub["has_handle"].astype(float))
-    ab_mean, ab_sd, ab_min, ab_max = stats(sub["active_before_ioi"].astype(float))
-    ms_mean, ms_sd, ms_min, ms_max = stats(sub["months_on_cf"])
-
-    rows.append(dict(
-        year=yr, n=n,
-        hh_mean=hh_mean, hh_sd=hh_sd, hh_min=hh_min, hh_max=hh_max,
-        ab_mean=ab_mean, ab_sd=ab_sd, ab_min=ab_min, ab_max=ab_max,
-        ms_mean=ms_mean, ms_sd=ms_sd, ms_min=ms_min, ms_max=ms_max,
-    ))
-
-tbl = pd.DataFrame(rows)
-
-# ── format helpers ────────────────────────────────────────────────────────────
-def fmt_pct(x):
-    return f"{x:.2f}" if pd.notna(x) else "---"
-
-def fmt_mo(x):
-    return f"{x:.1f}" if pd.notna(x) else "---"
+def fmt(x, fmt_str):
+    return fmt_str.format(x) if pd.notna(x) else "---"
 
 # ── build LaTeX ───────────────────────────────────────────────────────────────
-lines = []
-lines += [
+lines = [
     r"\begin{table}[htbp]",
     r"\centering",
-    r"\caption{Codeforces participation among IOI contestants, by year}",
+    r"\caption{Codeforces participation among IOI contestants}",
     r"\label{tab:cf_summary_by_year}",
-    r"\small",
-    r"\begin{tabular}{r r | rrrr | rrrr | rrrr}",
+    r"\begin{tabular}{l l r r r r r}",
     r"\toprule",
-    r" & & \multicolumn{4}{c|}{\textit{Has CF handle}} "
-    r"& \multicolumn{4}{c|}{\textit{Active before IOI}} "
-    r"& \multicolumn{4}{c}{\textit{Months on CF at IOI}} \\",
-    r"\cmidrule(lr){3-6}\cmidrule(lr){7-10}\cmidrule(lr){11-14}",
-    r"Year & $N$ & Mean & SD & Min & Max "
-    r"& Mean & SD & Min & Max "
-    r"& Mean & SD & Min & Max \\",
+    r"Variable & Period & $N$ & Mean & SD & Min & Max \\",
     r"\midrule",
 ]
 
-for _, r in tbl.iterrows():
-    yr  = int(r["year"])
-    n   = int(r["n"])
-    row = (
-        f"{yr} & {n}"
-        f" & {fmt_pct(r['hh_mean'])} & {fmt_pct(r['hh_sd'])}"
-        f" & {fmt_pct(r['hh_min'])} & {fmt_pct(r['hh_max'])}"
-        f" & {fmt_pct(r['ab_mean'])} & {fmt_pct(r['ab_sd'])}"
-        f" & {fmt_pct(r['ab_min'])} & {fmt_pct(r['ab_max'])}"
-        f" & {fmt_mo(r['ms_mean'])} & {fmt_mo(r['ms_sd'])}"
-        f" & {fmt_mo(r['ms_min'])} & {fmt_mo(r['ms_max'])}"
-        r" \\"
-    )
-    lines.append(row)
+for label, col, f in VARIABLES:
+    for i, (period_label, (y0, y1)) in enumerate(PERIODS.items()):
+        sub  = df[df["year"].between(y0, y1)]
+        n, m, s, lo, hi = stats(sub[col])
+        var_cell = r"\textit{" + label + r"}" if i == 0 else ""
+        lines.append(
+            f"{var_cell} & {period_label} & {n}"
+            f" & {fmt(m, f)} & {fmt(s, f)} & {fmt(lo, f)} & {fmt(hi, f)}"
+            r" \\"
+        )
+    lines.append(r"\addlinespace")
 
-lines += [
-    r"\midrule",
-]
-
-# totals row
-all_n      = int(tbl["n"].sum())
-hh_m, hh_s, hh_lo, hh_hi = stats(df["has_handle"].astype(float))
-ab_m, ab_s, ab_lo, ab_hi = stats(df["active_before_ioi"].astype(float))
-ms_m, ms_s, ms_lo, ms_hi = stats(df["months_on_cf"])
-
-lines.append(
-    rf"\textit{{All}} & {all_n}"
-    f" & {fmt_pct(hh_m)} & {fmt_pct(hh_s)}"
-    f" & {fmt_pct(hh_lo)} & {fmt_pct(hh_hi)}"
-    f" & {fmt_pct(ab_m)} & {fmt_pct(ab_s)}"
-    f" & {fmt_pct(ab_lo)} & {fmt_pct(ab_hi)}"
-    f" & {fmt_mo(ms_m)} & {fmt_mo(ms_s)}"
-    f" & {fmt_mo(ms_lo)} & {fmt_mo(ms_hi)}"
-    r" \\"
-)
+# trim trailing \addlinespace
+lines.pop()
 
 lines += [
     r"\bottomrule",
@@ -176,11 +131,12 @@ lines += [
     r"\smallskip",
     r"\footnotesize",
     r"\textit{Notes:} Unit of observation is participant $\times$ year. "
+    r"$N$ is variable-specific (rows with non-missing values). "
     r"\textit{Has CF handle}: indicator for whether a Codeforces profile link was "
     r"found in CPHOF or IOI Stats. "
     r"\textit{Active before IOI}: indicator for having at least one rated Codeforces "
     r"contest before the month preceding the IOI. "
-    r"\textit{Months on CF at IOI}: months elapsed between CF account registration "
+    r"\textit{Months on CF}: months elapsed between CF account registration "
     r"and the IOI start date, conditional on being active before the IOI.",
     r"\end{minipage}",
     r"\end{table}",
