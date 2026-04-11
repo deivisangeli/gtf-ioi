@@ -40,7 +40,8 @@ ioi_panel <- ioi %>%
     names_prefix    = "rating_",
     names_transform = list(rating_yr = as.integer)
   ) %>%
-  filter(rating_yr == year, !is.na(cf_rating_t))
+  filter(rating_yr == year, !is.na(cf_rating_t)) %>%
+  mutate(cf_rating_t = scale(cf_rating_t)[, 1])
 
 reg1 <- feols(score_pct_t ~ cf_rating_t | contestant + year,
               data = ioi_panel, cluster = ~contestant)
@@ -56,7 +57,8 @@ ioi_2025 <- ioi %>%
          !is.na(rating_2025), !is.na(cf_contribution), !is.na(cf_friend_of_count)) %>%
   mutate(score_pct       = percent_rank(score) * 100,
          log_friend_of   = log(cf_friend_of_count),
-         contrib_above20 = as.integer(cf_contribution > 20))
+         contrib_above20 = as.integer(cf_contribution > 20),
+         rating_2025     = scale(rating_2025)[, 1])
 
 reg2 <- feols(score_pct ~ rating_2025 + contrib_above20 + log_friend_of | country,
               data = ioi_2025, cluster = ~country)
@@ -135,7 +137,8 @@ ioi_max_to_last <- ioi_ratings_wide %>%
 
 ioi_best4 <- ioi_best %>%
   left_join(ioi_max_to_last, by = "contestant") %>%
-  filter(!is.na(max_rating_to_last_ioi))
+  filter(!is.na(max_rating_to_last_ioi)) %>%
+  mutate(max_rating_to_last_ioi = scale(max_rating_to_last_ioi)[, 1])
 
 reg4 <- feols(best_pct ~ max_rating_to_last_ioi + contrib_above20 + log_friend_of |
                 country + last_year,
