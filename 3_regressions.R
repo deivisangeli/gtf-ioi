@@ -147,7 +147,6 @@ cat(sprintf("Reg 4: N = %d\n", nobs(reg4)))
 mean_y <- c(
   round(mean(ioi_panel$score_pct_t,  na.rm = TRUE), 1),
   round(mean(ioi_2025$score_pct,     na.rm = TRUE), 1),
-  round(mean(ioi_best$best_pct,      na.rm = TRUE), 1),
   round(mean(ioi_best4$best_pct,     na.rm = TRUE), 1)
 )
 
@@ -165,17 +164,15 @@ var_dict <- c(
 )
 
 notes_str <- paste0(
-  "Clustered SEs: contestant level (col.~1), country level (cols.~2--4). ",
+  "Clustered SEs: contestant level (col.~1), country level (cols.~2--3). ",
   "Col.~(1): within-participant panel, contestant and year FE. ",
   "Col.~(2): 2025 IOI cohort, country FE. ",
-  "Cols.~(3)--(4): one obs per contestant; outcome = best within-year score percentile; ",
-  "country and last-year FE. ",
-  "Col.~(4) replaces career-max CF rating with the max of pre-IOI rating snapshots ",
-  "up to and including the contestant's last IOI year."
+  "Col.~(3): one obs per contestant; outcome = best within-year score percentile; ",
+  "country and last-year FE; CF rating = max of pre-IOI snapshots up to last IOI year."
 )
 
 etable(
-  reg1, reg2, reg3, reg4,
+  reg1, reg2, reg4,
   se.below   = TRUE,
   dict       = var_dict,
   order      = c("rating", "contrib", "log_friend"),
