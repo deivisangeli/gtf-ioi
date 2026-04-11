@@ -160,7 +160,9 @@ var_dict <- c(
   max_cf_rating           = "CF rating (career max)",
   max_rating_to_last_ioi  = "CF rating (max to last IOI year)",
   contrib_above20         = "CF contribution $>$ 20",
-  log_friend_of           = "log(CF friend-of count)"
+  log_friend_of           = "log(CF friend-of count)",
+  year                    = "IOI year",
+  last_year               = "Last IOI year"
 )
 
 notes_str <- paste0(
