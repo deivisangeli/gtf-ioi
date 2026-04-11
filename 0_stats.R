@@ -350,6 +350,42 @@ ggsave(
   dpi      = 300
 )
 
+# Scatter: CF contribution vs best performance percentile ----
+ioi_contrib_scatter <- ioi %>%
+  filter(!is.na(cf_contribution), !is.na(score)) %>%
+  group_by(year) %>%
+  mutate(score_pct = percent_rank(score) * 100) %>%
+  ungroup() %>%
+  group_by(contestant) %>%
+  slice_max(score_pct, n = 1, with_ties = FALSE) %>%
+  ungroup()
+
+top_contrib_label <- ioi_contrib_scatter %>%
+  slice_max(cf_contribution, n = 3)
+
+p_contrib_score <- ggplot(ioi_contrib_scatter,
+                          aes(x = cf_contribution, y = score_pct)) +
+  geom_point(alpha = 0.4, color = "steelblue", size = 1.5) +
+  geom_smooth(method = "lm", color = "red", se = TRUE) +
+  geom_text(data = top_contrib_label,
+            aes(label = contestant), hjust = -0.1, size = 3, color = "grey30") +
+  labs(
+    title   = "CF contribution vs best IOI score percentile",
+    subtitle = "One obs per contestant (best-ever within-year percentile)",
+    x       = "CF contribution",
+    y       = "Best score percentile"
+  ) +
+  theme_minimal()
+
+print(p_contrib_score)
+ggsave(
+  filename = file.path(cf_path, "output", "cf_contribution_vs_score_pct.png"),
+  plot     = p_contrib_score,
+  width    = 8,
+  height   = 6,
+  dpi      = 300
+)
+
 # How many participants?
 ioi_unique <- n_distinct(ioi$contestant) #3522
 
