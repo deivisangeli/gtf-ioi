@@ -310,6 +310,77 @@ ggsave(
   dpi = 300
 )
 
+# Experience by medal × year: zero-imputed version ----
+# Contests and months set to 0 for participants with no CF activity by the IOI date.
+# Denominator is all IOI participants (not just those with CF handles).
+ioi_exp_all <- ioi %>%
+  mutate(
+    result_unified = factor(case_when(
+      result %in% c("Gold", "Gold (3rd)", "Gold*") ~ "Gold",
+      result %in% c("Silver", "Silver*")            ~ "Silver",
+      result %in% c("Bronze", "Bronze*")            ~ "Bronze",
+      TRUE                                          ~ "No Award"
+    ), levels = medal_levels),
+    ioi_date    = IOI_DATES_R[as.character(year)],
+    cf_reg_date = as.Date(cf_registration_date),
+    months_on_cf = if_else(
+      is.na(cf_rating_reason) & !is.na(cf_reg_date),
+      as.numeric(ioi_date - cf_reg_date) / 30.44,
+      NA_real_
+    ),
+    contests_z = replace_na(cf_contests_before_ioi, 0),
+    months_z   = replace_na(months_on_cf, 0)
+  )
+
+exp_summary_z <- ioi_exp_all %>%
+  group_by(year, result_unified) %>%
+  summarise(
+    mean_contests = mean(contests_z),
+    mean_months   = mean(months_z),
+    .groups = "drop"
+  )
+
+p_exp_contests_z <- ggplot(exp_summary_z, aes(x = year, y = mean_contests,
+                                               color = result_unified, group = result_unified)) +
+  geom_line(linewidth = 0.8) +
+  geom_point(size = 2.5) +
+  scale_color_manual(values = medal_colours, name = NULL) +
+  scale_x_continuous(breaks = 2011:2025) +
+  labs(
+    title = "Rated CF contests before IOI, by medal",
+    subtitle = "0 for participants with no CF activity; all IOI participants in denominator",
+    x = NULL, y = "Mean contests before IOI"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+p_exp_months_z <- ggplot(exp_summary_z, aes(x = year, y = mean_months,
+                                             color = result_unified, group = result_unified)) +
+  geom_line(linewidth = 0.8) +
+  geom_point(size = 2.5) +
+  scale_color_manual(values = medal_colours, name = NULL) +
+  scale_x_continuous(breaks = 2011:2025) +
+  labs(
+    title = "Months on Codeforces before IOI, by medal",
+    subtitle = "0 for participants with no CF activity; all IOI participants in denominator",
+    x = "IOI year", y = "Mean months since CF registration"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+p_exp_combined_z <- p_exp_contests_z / p_exp_months_z +
+  plot_layout(guides = "collect") &
+  theme(legend.position = "bottom")
+
+print(p_exp_combined_z)
+ggsave(
+  filename = file.path(cf_path, "output", "cf_experience_by_medal_year_zeros.png"),
+  plot = p_exp_combined_z,
+  width = 10,
+  height = 10,
+  dpi = 300
+)
+
 # Scatter: log(CF friend-of count) vs score percentile ----
 # One obs per contestant (friend-of count is a current snapshot, not year-varying).
 # Use best-ever within-year score percentile as the performance measure.
