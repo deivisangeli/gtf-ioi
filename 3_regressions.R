@@ -54,10 +54,11 @@ cat(sprintf("Reg 1: N = %d, participants = %d\n",
 ioi_2025 <- ioi %>%
   filter(year == 2025,
          !is.na(rating_2025), !is.na(cf_contribution), !is.na(cf_friend_of_count)) %>%
-  mutate(score_pct      = percent_rank(score) * 100,
-         log_friend_of  = log(cf_friend_of_count))
+  mutate(score_pct       = percent_rank(score) * 100,
+         log_friend_of   = log(cf_friend_of_count),
+         contrib_above20 = as.integer(cf_contribution > 20))
 
-reg2 <- feols(score_pct ~ rating_2025 + cf_contribution + log_friend_of | country,
+reg2 <- feols(score_pct ~ rating_2025 + contrib_above20 + log_friend_of | country,
               data = ioi_2025, cluster = ~country)
 
 cat(sprintf("Reg 2: N = %d\n", nobs(reg2)))
@@ -101,9 +102,10 @@ ioi_best <- ioi_best_pct %>%
   left_join(ioi_last, by = "contestant") %>%
   left_join(ioi_cf,   by = "contestant") %>%
   filter(!is.na(max_cf_rating), !is.na(cf_contribution), !is.na(cf_friend_of_count)) %>%
-  mutate(log_friend_of = log(cf_friend_of_count))
+  mutate(log_friend_of   = log(cf_friend_of_count),
+         contrib_above20 = as.integer(cf_contribution > 20))
 
-reg3 <- feols(best_pct ~ max_cf_rating + cf_contribution + log_friend_of |
+reg3 <- feols(best_pct ~ max_cf_rating + contrib_above20 + log_friend_of |
                 country + last_year,
               data = ioi_best, cluster = ~country)
 
@@ -124,7 +126,7 @@ var_dict <- c(
   cf_rating_t        = "CF rating (year $t$)",
   rating_2025        = "CF rating (2025)",
   max_cf_rating      = "CF rating (career max)",
-  cf_contribution    = "CF contribution",
+  contrib_above20    = "CF contribution $>$ 20",
   log_friend_of      = "log(CF friend-of count)"
 )
 
