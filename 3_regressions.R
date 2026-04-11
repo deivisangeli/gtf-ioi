@@ -152,7 +152,7 @@ mean_y <- c(
 
 # ── LaTeX table via fixest::etable (standard booktabs, no tabularray) ─────────
 var_dict <- c(
-  score_pct_t        = "Score percentile (year $t$)",
+  score_pct_t        = "Score percentile",
   score_pct          = "Score percentile",
   best_pct           = "Best percentile",
   cf_rating_t        = "CF rating (year $t$)",
