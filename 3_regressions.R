@@ -104,6 +104,13 @@ reg3 <- feols(best_pct ~ max_cf_rating + cf_contribution + cf_friend_of_count |
 
 cat(sprintf("Reg 3: N = %d\n", nobs(reg3)))
 
+# ── Outcome means (from regression samples) ───────────────────────────────────
+mean_y <- c(
+  round(mean(ioi_panel$score,     na.rm = TRUE), 1),
+  round(mean(ioi_2025$score_pct,  na.rm = TRUE), 1),
+  round(mean(ioi_best$best_pct,   na.rm = TRUE), 1)
+)
+
 # ── LaTeX table via fixest::etable (standard booktabs, no tabularray) ─────────
 var_dict <- c(
   score              = "IOI score",
@@ -127,14 +134,15 @@ notes_str <- paste0(
 
 etable(
   reg1, reg2, reg3,
-  se.below = TRUE,
-  dict     = var_dict,
-  title    = "Codeforces experience and IOI performance",
-  label    = "tab:cf_regressions",
-  notes    = notes_str,
-  tex      = TRUE,
-  file     = OUTPUT_TEX,
-  replace  = TRUE
+  se.below  = TRUE,
+  dict      = var_dict,
+  extralines = list("Mean outcome" = mean_y),
+  title     = "Codeforces experience and IOI performance",
+  label     = "tab:cf_regressions",
+  notes     = notes_str,
+  tex       = TRUE,
+  file      = OUTPUT_TEX,
+  replace   = TRUE
 )
 
 cat("Saved →", OUTPUT_TEX, "\n")
