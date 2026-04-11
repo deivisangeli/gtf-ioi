@@ -2,39 +2,42 @@
 \begin{table}[htbp]
    \caption{\label{tab:cf_regressions} Codeforces experience and IOI performance}
    \centering
-   \begin{tabular}{lccc}
+   \begin{tabular}{lcccc}
       \tabularnewline \midrule \midrule
-      Dependent Variables:    & Score percentile (year $t$) & Score percentile & Best percentile\\  
-      Model:                  & (1)                         & (2)              & (3)\\  
+      Dependent Variables: & Score percentile (year $t$) & Score percentile & \multicolumn{2}{c}{Best percentile}\\
+      Model:                           & (1)            & (2)            & (3)            & (4)\\  
       \midrule
       \emph{Variables}\\
-      CF rating (year $t$)    & 0.0296$^{***}$              &                  &   \\   
-                              & (0.0022)                    &                  &   \\   
-      CF rating (2025)        &                             & 0.0285$^{***}$   &   \\   
-                              &                             & (0.0052)         &   \\   
-      CF rating (career max)  &                             &                  & 0.0279$^{***}$\\   
-                              &                             &                  & (0.0026)\\   
-      CF contribution $>$ 20  &                             & -4.670           & -4.010$^{***}$\\   
-                              &                             & (3.494)          & (1.272)\\   
-      log(CF friend-of count) &                             & 3.811$^{**}$     & 0.7624\\   
-                              &                             & (1.777)          & (0.6273)\\   
-      Mean outcome            & 58.7                        & 50               & 62.4\\  
+      CF rating (year $t$)             & 0.0121$^{***}$ &                &                &   \\   
+                                       & (0.0027)       &                &                &   \\   
+      CF rating (2025)                 &                & 0.0285$^{***}$ &                &   \\   
+                                       &                & (0.0052)       &                &   \\   
+      CF rating (career max)           &                &                & 0.0279$^{***}$ &   \\   
+                                       &                &                & (0.0026)       &   \\   
+      CF rating (max to last IOI year) &                &                &                & 0.0321$^{***}$\\   
+                                       &                &                &                & (0.0031)\\   
+      CF contribution $>$ 20           &                & -4.670         & -4.010$^{***}$ & -3.107$^{***}$\\   
+                                       &                & (3.494)        & (1.272)        & (1.164)\\   
+      log(CF friend-of count)          &                & 3.811$^{**}$   & 0.7624         & 2.539$^{***}$\\   
+                                       &                & (1.777)        & (0.6273)       & (0.6317)\\   
+      Mean outcome                     & 58.7           & 50             & 62.4           & 62.8\\  
       \midrule
       \emph{Fixed-effects}\\
-      contestant              & Yes                         &                  & \\  
-      country                 &                             & Yes              & Yes\\  
-      last\_year              &                             &                  & Yes\\  
+      contestant                       & Yes            &                &                & \\  
+      year                             & Yes            &                &                & \\  
+      country                          &                & Yes            & Yes            & Yes\\  
+      last\_year                       &                &                & Yes            & Yes\\  
       \midrule
       \emph{Fit statistics}\\
-      Observations            & 2,054                       & 206              & 1,955\\  
-      R$^2$                   & 0.86368                     & 0.81084          & 0.70601\\  
-      Within R$^2$            & 0.17701                     & 0.31640          & 0.25742\\  
+      Observations                     & 2,054          & 206            & 1,955          & 1,888\\  
+      R$^2$                            & 0.87782        & 0.81084        & 0.70601        & 0.72764\\  
+      Within R$^2$                     & 0.01927        & 0.31640        & 0.25742        & 0.30921\\  
       \midrule \midrule
-      \multicolumn{4}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+      \multicolumn{5}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
    \end{tabular}
    
    \par \raggedright 
-   Clustered SEs: contestant level (col.~1), country level (cols.~2--3). Col.~(1): within-participant panel, participant FE, all IOI years with a valid same-year CF rating. Col.~(2): 2025 IOI cohort, country FE. Col.~(3): one obs per contestant; outcome = best within-year score percentile; country and last-year FE.
+   Clustered SEs: contestant level (col.~1), country level (cols.~2--4). Col.~(1): within-participant panel, contestant and year FE. Col.~(2): 2025 IOI cohort, country FE. Cols.~(3)--(4): one obs per contestant; outcome = best within-year score percentile; country and last-year FE. Col.~(4) replaces career-max CF rating with the max of pre-IOI rating snapshots up to and including the contestant's last IOI year.
 \end{table}
 
 

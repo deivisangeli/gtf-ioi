@@ -42,7 +42,7 @@ ioi_panel <- ioi %>%
   ) %>%
   filter(rating_yr == year, !is.na(cf_rating_t))
 
-reg1 <- feols(score_pct_t ~ cf_rating_t | contestant,
+reg1 <- feols(score_pct_t ~ cf_rating_t | contestant + year,
               data = ioi_panel, cluster = ~contestant)
 
 cat(sprintf("Reg 1: N = %d, participants = %d\n",
@@ -111,11 +111,44 @@ reg3 <- feols(best_pct ~ max_cf_rating + contrib_above20 + log_friend_of |
 
 cat(sprintf("Reg 3: N = %d\n", nobs(reg3)))
 
+# ── Regression 4: best-ever percentile, max CF rating capped at last IOI year ──
+# cf_max_rating_ever may include ratings achieved after the contestant's last IOI,
+# introducing a look-ahead bias. Here we take the max of the per-IOI-date rating
+# snapshots (rating_2011 … rating_{last_year}) instead.
+rating_cols <- paste0("rating_", 2011:2025)
+
+ioi_ratings_wide <- ioi %>%
+  select(contestant, all_of(rating_cols)) %>%
+  group_by(contestant) %>%
+  summarise(across(all_of(rating_cols), ~first(na.omit(.))), .groups = "drop")
+
+ioi_max_to_last <- ioi_ratings_wide %>%
+  left_join(select(ioi_last, contestant, last_year), by = "contestant") %>%
+  pivot_longer(all_of(rating_cols),
+               names_to        = "rating_yr",
+               values_to       = "rating",
+               names_prefix    = "rating_",
+               names_transform = list(rating_yr = as.integer)) %>%
+  filter(!is.na(last_year), rating_yr <= last_year, !is.na(rating)) %>%
+  group_by(contestant) %>%
+  summarise(max_rating_to_last_ioi = max(rating), .groups = "drop")
+
+ioi_best4 <- ioi_best %>%
+  left_join(ioi_max_to_last, by = "contestant") %>%
+  filter(!is.na(max_rating_to_last_ioi))
+
+reg4 <- feols(best_pct ~ max_rating_to_last_ioi + contrib_above20 + log_friend_of |
+                country + last_year,
+              data = ioi_best4, cluster = ~country)
+
+cat(sprintf("Reg 4: N = %d\n", nobs(reg4)))
+
 # ── Outcome means (from regression samples) ───────────────────────────────────
 mean_y <- c(
-  round(mean(ioi_panel$score_pct_t, na.rm = TRUE), 1),
-  round(mean(ioi_2025$score_pct,  na.rm = TRUE), 1),
-  round(mean(ioi_best$best_pct,   na.rm = TRUE), 1)
+  round(mean(ioi_panel$score_pct_t,  na.rm = TRUE), 1),
+  round(mean(ioi_2025$score_pct,     na.rm = TRUE), 1),
+  round(mean(ioi_best$best_pct,      na.rm = TRUE), 1),
+  round(mean(ioi_best4$best_pct,     na.rm = TRUE), 1)
 )
 
 # ── LaTeX table via fixest::etable (standard booktabs, no tabularray) ─────────
@@ -125,32 +158,34 @@ var_dict <- c(
   best_pct           = "Best percentile",
   cf_rating_t        = "CF rating (year $t$)",
   rating_2025        = "CF rating (2025)",
-  max_cf_rating      = "CF rating (career max)",
-  contrib_above20    = "CF contribution $>$ 20",
-  log_friend_of      = "log(CF friend-of count)"
+  max_cf_rating           = "CF rating (career max)",
+  max_rating_to_last_ioi  = "CF rating (max to last IOI year)",
+  contrib_above20         = "CF contribution $>$ 20",
+  log_friend_of           = "log(CF friend-of count)"
 )
 
 notes_str <- paste0(
-  "Clustered SEs: contestant level (col.~1), country level (cols.~2--3). ",
-  "Col.~(1): within-participant panel, participant FE, all IOI years with ",
-  "a valid same-year CF rating. ",
+  "Clustered SEs: contestant level (col.~1), country level (cols.~2--4). ",
+  "Col.~(1): within-participant panel, contestant and year FE. ",
   "Col.~(2): 2025 IOI cohort, country FE. ",
-  "Col.~(3): one obs per contestant; outcome = best within-year score percentile; ",
-  "country and last-year FE."
+  "Cols.~(3)--(4): one obs per contestant; outcome = best within-year score percentile; ",
+  "country and last-year FE. ",
+  "Col.~(4) replaces career-max CF rating with the max of pre-IOI rating snapshots ",
+  "up to and including the contestant's last IOI year."
 )
 
 etable(
-  reg1, reg2, reg3,
+  reg1, reg2, reg3, reg4,
   se.below   = TRUE,
   dict       = var_dict,
-  order      = c("rating", "contribution", "log_friend"),
+  order      = c("rating", "contrib", "log_friend"),
   extralines = list("Mean outcome" = mean_y),
-  title     = "Codeforces experience and IOI performance",
-  label     = "tab:cf_regressions",
-  notes     = notes_str,
-  tex       = TRUE,
-  file      = OUTPUT_TEX,
-  replace   = TRUE
+  title      = "Codeforces experience and IOI performance",
+  label      = "tab:cf_regressions",
+  notes      = notes_str,
+  tex        = TRUE,
+  file       = OUTPUT_TEX,
+  replace    = TRUE
 )
 
 cat("Saved →", OUTPUT_TEX, "\n")
