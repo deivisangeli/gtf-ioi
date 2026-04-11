@@ -134,8 +134,9 @@ notes_str <- paste0(
 
 etable(
   reg1, reg2, reg3,
-  se.below  = TRUE,
-  dict      = var_dict,
+  se.below   = TRUE,
+  dict       = var_dict,
+  order      = c("rating", "contribution", "friend"),
   extralines = list("Mean outcome" = mean_y),
   title     = "Codeforces experience and IOI performance",
   label     = "tab:cf_regressions",
