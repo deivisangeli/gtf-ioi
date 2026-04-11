@@ -1,0 +1,39 @@
+
+\begin{table}[htbp]
+   \caption{\label{tab:cf_regressions} Codeforces experience and IOI performance}
+   \centering
+   \begin{tabular}{lccc}
+      \tabularnewline \midrule \midrule
+      Dependent Variables:   & IOI score      & Score percentile & Best percentile\\  
+      Model:                 & (1)            & (2)              & (3)\\  
+      \midrule
+      \emph{Variables}\\
+      CF rating (year $t$)   & 0.1430$^{***}$ &                  &   \\   
+                             & (0.0104)       &                  &   \\   
+      CF rating (2025)       &                & 0.0328$^{***}$   &   \\   
+                             &                & (0.0044)         &   \\   
+      CF contribution        &                & -0.0241          & -0.0471$^{**}$\\   
+                             &                & (0.0699)         & (0.0190)\\   
+      CF friend-of count     &                & 0.0018$^{***}$   & -0.0004$^{***}$\\   
+                             &                & (0.0006)         & (0.0001)\\   
+      CF rating (career max) &                &                  & 0.0306$^{***}$\\   
+                             &                &                  & (0.0022)\\   
+      \midrule
+      \emph{Fixed-effects}\\
+      contestant             & Yes            &                  & \\  
+      country                &                & Yes              & Yes\\  
+      last\_year             &                &                  & Yes\\  
+      \midrule
+      \emph{Fit statistics}\\
+      Observations           & 2,054          & 206              & 1,955\\  
+      R$^2$                  & 0.81923        & 0.80870          & 0.70692\\  
+      Within R$^2$           & 0.14946        & 0.30864          & 0.25971\\  
+      \midrule \midrule
+      \multicolumn{4}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+   \end{tabular}
+   
+   \par \raggedright 
+   Clustered SEs: contestant level (col.~1), country level (cols.~2--3). Col.~(1): within-participant panel, participant FE, all IOI years with a valid same-year CF rating. Col.~(2): 2025 IOI cohort, country FE. Col.~(3): one obs per contestant; outcome = best within-year score percentile; country and last-year FE.
+\end{table}
+
+
