@@ -29,7 +29,10 @@ ioi <- read_xlsx(file.path(cf_path, "Data", "ioi_total_rating.xlsx"))
 # year's IOI, so rating_t is the participant's standing right before competing.
 ioi_panel <- ioi %>%
   filter(!is.na(score)) %>%
-  select(contestant, year, score, starts_with("rating_")) %>%
+  group_by(year) %>%
+  mutate(score_pct_t = percent_rank(score) * 100) %>%
+  ungroup() %>%
+  select(contestant, year, score, score_pct_t, starts_with("rating_")) %>%
   pivot_longer(
     starts_with("rating_"),
     names_to        = "rating_yr",
@@ -39,7 +42,7 @@ ioi_panel <- ioi %>%
   ) %>%
   filter(rating_yr == year, !is.na(cf_rating_t))
 
-reg1 <- feols(score ~ cf_rating_t | contestant,
+reg1 <- feols(score_pct_t ~ cf_rating_t | contestant,
               data = ioi_panel, cluster = ~contestant)
 
 cat(sprintf("Reg 1: N = %d, participants = %d\n",
@@ -108,14 +111,14 @@ cat(sprintf("Reg 3: N = %d\n", nobs(reg3)))
 
 # ── Outcome means (from regression samples) ───────────────────────────────────
 mean_y <- c(
-  round(mean(ioi_panel$score,     na.rm = TRUE), 1),
+  round(mean(ioi_panel$score_pct_t, na.rm = TRUE), 1),
   round(mean(ioi_2025$score_pct,  na.rm = TRUE), 1),
   round(mean(ioi_best$best_pct,   na.rm = TRUE), 1)
 )
 
 # ── LaTeX table via fixest::etable (standard booktabs, no tabularray) ─────────
 var_dict <- c(
-  score              = "IOI score",
+  score_pct_t        = "Score percentile (year $t$)",
   score_pct          = "Score percentile",
   best_pct           = "Best percentile",
   cf_rating_t        = "CF rating (year $t$)",
