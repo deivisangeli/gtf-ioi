@@ -17,7 +17,7 @@ OUTPUT_TEX   <- file.path(gtf_ioi_dir, "output", "tab_regressions.tex")
 dir.create(dirname(OUTPUT_TEX), showWarnings = FALSE, recursive = TRUE)
 
 overleaf_dir <- file.path(dirname(gtl_path), "gtl-allocation", "overleaf",
-                           "GTAllocation", "tables", "ioi")
+                           "GTAllocation", "GTAllocation", "tables", "ioi")
 OVERLEAF_TEX <- file.path(overleaf_dir, "tab_regressions.tex")
 
 # ── Load ───────────────────────────────────────────────────────────────────────
@@ -192,7 +192,11 @@ etable(
 
 cat("Saved →", OUTPUT_TEX, "\n")
 
-if (dir.exists(overleaf_dir)) {
+if (dir.exists(dirname(dirname(overleaf_dir)))) {  # overleaf/GTAllocation exists
+  dir.create(overleaf_dir, recursive = TRUE, showWarnings = FALSE)
   file.copy(OUTPUT_TEX, OVERLEAF_TEX, overwrite = TRUE)
   cat("Mirrored →", OVERLEAF_TEX, "\n")
+} else {
+  cat("Overleaf repo not cloned at", dirname(dirname(overleaf_dir)),
+      "- skipping mirror\n")
 }

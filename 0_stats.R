@@ -114,6 +114,81 @@ ggsave(
   dpi = 300
 )
 
+# results ----
+# Add unified result to ioi_long (fold '*' and 'Gold (3rd)' variants)
+ioi_long <- ioi_long %>%
+  mutate(result_unified = case_when(
+    result %in% c("Gold", "Gold (3rd)", "Gold*") ~ "Gold",
+    result %in% c("Silver", "Silver*")            ~ "Silver",
+    result %in% c("Bronze", "Bronze*")            ~ "Bronze",
+    TRUE ~ result
+  ))
+
+# boxplot ----
+# Boxplot: Rating by Result (all years)
+p_result <- ggplot(ioi_long, aes(x = result_unified, y = rating, fill = result_unified)) +
+  geom_boxplot(alpha = 0.7) +
+  labs(
+    title = "Codeforces Rating by IOI Result (2011-2025)",
+    x = "IOI Result",
+    y = "Codeforces Rating"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+print(p_result)
+ggsave(
+  filename = file.path(cf_path, "output", "rating_by_result.png"),
+  plot = p_result,
+  width = 10,
+  height = 6,
+  dpi = 300
+)
+
+# scatterplot ----
+# Scatterplot: Rating vs Score colored by Result (all years)
+p_scatter_result <- ggplot(ioi_long, aes(x = rating, y = score, color = result_unified)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(
+    title = "IOI Score vs Codeforces Rating by Medal Type (2011-2025)",
+    x = "Codeforces Rating",
+    y = "IOI Score",
+    color = "Medal"
+  ) +
+  theme_minimal()
+
+print(p_scatter_result)
+ggsave(
+  filename = file.path(cf_path, "output", "score_vs_rating_by_result.png"),
+  plot = p_scatter_result,
+  width = 10,
+  height = 6,
+  dpi = 300
+)
+
+# Scatterplot: Rating vs Score colored by Result, separated by year
+p_scatter_result_year <- ggplot(ioi_long, aes(x = rating, y = score, color = result_unified)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", se = TRUE) +
+  facet_wrap(~ rating_year, ncol = 3) +
+  labs(
+    title = "IOI Score vs Codeforces Rating by Medal Type and Year (2011-2025)",
+    x = "Codeforces Rating",
+    y = "IOI Score",
+    color = "Medal"
+  ) +
+  theme_minimal()
+
+print(p_scatter_result_year)
+ggsave(
+  filename = file.path(cf_path, "output", "score_vs_rating_by_result_by_year.png"),
+  plot = p_scatter_result_year,
+  width = 14,
+  height = 12,
+  dpi = 300
+)
+
 # Conditional plots: active in 6 months before IOI ----
 # Filter to participants with at least 1 contest in the 6 months before their IOI
 ioi_long_active6m <- ioi %>%
@@ -460,5 +535,122 @@ ggsave(
 # How many participants?
 ioi_unique <- n_distinct(ioi$contestant) #3522
 
-# How many of them have an account on Codeforces?
-ioi_unique_cf <- n_distinct(ioi_with_cf$contestant) #2062
+# ── Build matched dataset: each IOI participation matched to its year's rating ─
+# For each row (contestant-year), extract the CF rating for THAT specific year.
+ioi_matched <- ioi %>%
+  filter(!is.na(handle)) %>%
+  pivot_longer(cols = starts_with("rating_"),
+               names_to = "rating_year", values_to = "rating_val",
+               names_prefix = "rating_") %>%
+  mutate(rating_year = as.integer(rating_year)) %>%
+  filter(rating_year == year) %>%
+  rename(cf_rating = rating_val) %>%
+  select(-rating_year) %>%
+  mutate(
+    cf_rating = replace_na(cf_rating, 0),
+    result_unified = case_when(
+      result %in% c("Gold", "Gold (3rd)", "Gold*") ~ "Gold",
+      result %in% c("Silver", "Silver*")            ~ "Silver",
+      result %in% c("Bronze", "Bronze*")             ~ "Bronze",
+      TRUE ~ "No Award"
+    )
+  )
+
+# Version without zero-rating participants
+ioi_nonzero <- ioi_matched %>% filter(cf_rating > 0)
+
+cat("Matched dataset:", nrow(ioi_matched), "rows |",
+    "Non-zero rating:", nrow(ioi_nonzero), "rows\n")
+
+# ────────────────────────────────────────────────────────────────────────────
+### FIGURES ----
+# ────────────────────────────────────────────────────────────────────────────
+
+# ── 1. FIGURES DROPPING ZERO RATING ──────────────────────────────────────────
+
+# Scatterplot: score vs rating (no zeros, all years)
+p_nz <- ggplot(ioi_nonzero, aes(x = cf_rating, y = score)) +
+  geom_point(alpha = 0.3, color = "steelblue") +
+  geom_smooth(method = "lm", color = "red", se = TRUE) +
+  labs(title = "IOI Score vs Codeforces Rating (Excluding Zero Ratings, 2011-2025)",
+       x = "Codeforces Rating (1 month before IOI)", y = "IOI Score") +
+  theme_minimal()
+ggsave(file.path(cf_path, "output", "ioi_score_vs_rating_nonzero.png"),
+       plot = p_nz, width = 10, height = 6, dpi = 300)
+
+# Per year (no zeros)
+p_nz_year <- ggplot(ioi_nonzero, aes(x = cf_rating, y = score)) +
+  geom_point(alpha = 0.3, color = "steelblue") +
+  geom_smooth(method = "lm", color = "red", se = TRUE) +
+  facet_wrap(~ year, ncol = 3) +
+  labs(title = "IOI Score vs Codeforces Rating by Year (Excluding Zero Ratings)",
+       x = "Codeforces Rating", y = "IOI Score") +
+  theme_minimal()
+ggsave(file.path(cf_path, "output", "ioi_score_vs_rating_by_year_nonzero.png"),
+       plot = p_nz_year, width = 12, height = 10, dpi = 300)
+
+# Boxplot by result (no zeros)
+p_box_nz <- ggplot(ioi_nonzero, aes(x = result_unified, y = cf_rating, fill = result_unified)) +
+  geom_boxplot(alpha = 0.7) +
+  labs(title = "Codeforces Rating by IOI Result (Excluding Zero Ratings, 2011-2025)",
+       x = "IOI Result", y = "Codeforces Rating") +
+  theme_minimal() + theme(legend.position = "none")
+ggsave(file.path(cf_path, "output", "rating_by_result_nonzero.png"),
+       plot = p_box_nz, width = 10, height = 6, dpi = 300)
+
+# Scatter by result (no zeros)
+p_scatter_nz <- ggplot(ioi_nonzero, aes(x = cf_rating, y = score, color = result_unified)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(title = "IOI Score vs CF Rating by Medal Type (Excluding Zero Ratings)",
+       x = "Codeforces Rating", y = "IOI Score", color = "Medal") +
+  theme_minimal()
+ggsave(file.path(cf_path, "output", "score_vs_rating_by_result_nonzero.png"),
+       plot = p_scatter_nz, width = 10, height = 6, dpi = 300)
+
+cat("Saved 4 non-zero rating figures\n")
+
+# ── 2. IOI SCORE VS MONTHS SINCE CF ACCOUNT CREATION ────────────────────────
+
+# IOI competition start dates (from 1_datacollection.py)
+ioi_dates <- tibble(
+  year = 2011:2025,
+  ioi_date = as.Date(c("2011-07-22", "2012-09-23", "2013-07-06", "2014-07-13",
+                       "2015-07-26", "2016-08-12", "2017-07-28", "2018-09-01",
+                       "2019-08-04", "2020-09-13", "2021-06-19", "2022-08-07",
+                       "2023-08-28", "2024-09-01", "2025-07-27"))
+)
+
+ioi_months <- ioi_matched %>%
+  filter(!is.na(cf_registration_date)) %>%
+  left_join(ioi_dates, by = "year") %>%
+  mutate(
+    cf_reg_date = as.Date(cf_registration_date),
+    months_since_creation = as.numeric(difftime(ioi_date, cf_reg_date, units = "days")) / 30.44
+  ) %>%
+  filter(months_since_creation > 0)  # only accounts created before IOI
+
+p_months <- ggplot(ioi_months, aes(x = months_since_creation, y = score)) +
+  geom_point(alpha = 0.3, color = "steelblue") +
+  geom_smooth(method = "lm", color = "red", se = TRUE) +
+  facet_wrap(~ year, ncol = 3) +
+  labs(title = "IOI Score vs Months Since CF Account Creation",
+       x = "Months between CF Account Creation and IOI",
+       y = "IOI Score") +
+  theme_minimal()
+ggsave(file.path(cf_path, "output", "ioi_score_vs_months_since_creation.png"),
+       plot = p_months, width = 12, height = 10, dpi = 300)
+
+# Same plot, all years combined
+p_months_all <- ggplot(ioi_months, aes(x = months_since_creation, y = score)) +
+  geom_point(alpha = 0.3, color = "steelblue") +
+  geom_smooth(method = "lm", color = "red", se = TRUE) +
+  labs(title = "IOI Score vs Months Since CF Account Creation (All Years)",
+       x = "Months between CF Account Creation and IOI",
+       y = "IOI Score") +
+  theme_minimal()
+ggsave(file.path(cf_path, "output", "ioi_score_vs_months_since_creation_all.png"),
+       plot = p_months_all, width = 10, height = 6, dpi = 300)
+
+cat("Saved months-since-creation figures\n")
+

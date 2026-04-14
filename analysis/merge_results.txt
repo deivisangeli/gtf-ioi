@@ -1,0 +1,14 @@
+● Resultado do merge (versão R):
+
+  ┌──────────────────────────────────────────────┬───────┬─────────┬───────────────┐
+  │                    Coorte                    │ Total │ Matched │     Taxa      │
+  ├──────────────────────────────────────────────┼───────┼─────────┼───────────────┤
+  │ IOI lastYear ≥ 2011 (dentro da cobertura CF) │ 2012  │ 2009    │ 99,85%        │
+  ├──────────────────────────────────────────────┼───────┼─────────┼───────────────┤
+  │ IOI lastYear < 2011 (antes do CF)            │ 2225  │ 0       │ 0% (esperado) │
+  └──────────────────────────────────────────────┴───────┴─────────┴───────────────┘
+
+  3 não‑matches no período de sobreposição:
+  - Alejo El Salvador (ARG 2013)
+  - Astor Bjornsson (ISL 2019, provavelmente "Björnsson" no CF)
+  - Lucas Fernan El Salvador (ARG 2017)
