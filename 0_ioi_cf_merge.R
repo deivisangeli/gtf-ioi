@@ -161,7 +161,7 @@ country_group <- function(norm_c) {
          norm_c)
 }
 
-# 7 similarity helpers (adapted from olympics/cleaning/IMO_data_clean.R)
+# 7 similarity helpers
 token_fuzzy_similarity <- function(name_a, name_b) {
   tokens_a <- unlist(strsplit(name_a, " "))
   tokens_b <- unlist(strsplit(name_b, " "))
